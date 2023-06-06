@@ -147,13 +147,13 @@ def stable_model(request, rq_id, img_url, paint):
     # image = ImageOps.exif_transpose(image)
     # image = image.convert("RGB")
 
-    sfw_prompt = "Generate safe and SFW images without any NSFW content."
+    sfw_prompt = "Safe and SFW (Safe For Work) Image, Non-explicit and Family-friendly Picture"
 
     for i in range(1, 4):
         for p in Prompt:
-            prompt = str(p.name) + ", " + str(t_name)# + ", " + sfw_prompt
+            prompt = str(p.name) + ", " + str(t_name)
             images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5,
-                          guidance_scale=7).images
+                          guidance_scale=7, negative_prompt=sfw_prompt).images
             images[0].save("stable_pix2pix.png")
 
             # remove background
@@ -240,13 +240,13 @@ def style_model(request, rq_id, img_url):
 
     image = download_image(url)
 
-    sfw_prompt = "Generate safe and SFW images without any NSFW content."
+    sfw_prompt = "Safe and SFW (Safe For Work) Image, Non-explicit and Family-friendly Picture"
 
     for i in range(1, 4):
         for p in Painting:
             prompt = str(p.value)# + ", " + sfw_prompt
             images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5,
-                          guidance_scale=7).images
+                          guidance_scale=7, negative_prompt=sfw_prompt).images
             images[0].save("paintingStyle.png")
 
             input_path = 'paintingStyle.png'
