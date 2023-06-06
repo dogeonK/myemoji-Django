@@ -153,7 +153,7 @@ def stable_model(request, rq_id, img_url, paint):
         for p in Prompt:
             prompt = str(p.name) + ", " + str(t_name)
             images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5,
-                          guidance_scale=7, negative_prompt=sfw_prompt).images
+                          guidance_scale=7).images
             images[0].save("stable_pix2pix.png")
 
             # remove background
@@ -244,9 +244,9 @@ def style_model(request, rq_id, img_url):
 
     for i in range(1, 4):
         for p in Painting:
-            prompt = str(p.value)# + ", " + sfw_prompt
+            prompt = str(p.value)
             images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5,
-                          guidance_scale=7, negative_prompt=sfw_prompt).images
+                          guidance_scale=7).images
             images[0].save("paintingStyle.png")
 
             input_path = 'paintingStyle.png'
