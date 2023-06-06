@@ -18,7 +18,7 @@ class StyleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Style
-        fields = ('requestId', 'tagName', "imgUrl")
+        fields = ('requestId', 'tagName', "tagUrl")
 
 class EmojiSerializer(serializers.ModelSerializer):
     #emoji = serializers.ImageField(use_url=True)
