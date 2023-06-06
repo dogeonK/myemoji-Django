@@ -240,10 +240,11 @@ def style_model(request, rq_id, img_url):
 
     image = download_image(url)
 
+    sfw_prompt = "Generate safe and SFW images without any NSFW content."
 
     for i in range(1, 4):
         for p in Painting:
-            prompt = str(p.value)
+            prompt = str(p.value) + ", " + sfw_prompt
             images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5,
                           guidance_scale=7).images
             images[0].save("paintingStyle.png")
