@@ -42,7 +42,11 @@ class EmojiAPI(APIView):
     def get(self, request, rq_id):
         queryset = Emoji.objects.filter(requestId=rq_id)
         serializer = EmojiSerializer(queryset, many=True)
-        return Response(serializer.data)
+
+        data = serializer.data
+        post_url = "http://3.39.22.13:8080/emoji/response"
+        response = requests.post(post_url, json=data)
+        return Response(data)
 
 
 def test_reqeust(request):
@@ -77,6 +81,14 @@ def stable_model(request, rq_id, img_url, paint):
 
     image = download_image(url)
     image.save("original.png")
+
+    # remove background
+    input_path = 'original.png'
+    output_path = 'original_rmbg.png'
+
+    input = Image.open(input_path)
+    output = remove(input)
+    output.save(output_path)
 
     # mp4 변환 메서드들
     def load_model(model_name):
@@ -171,7 +183,7 @@ def stable_model(request, rq_id, img_url, paint):
             # img = open("merge.png", "rb") #gif 처리로 변환 -> 주석 처리
 
             # mp4 생성 후 -> gif 변경
-            predict("original.png", "merge.png", 3, model_name)
+            predict("original_rmbg.png", "merge.png", 3, model_name)
             VideoFileClip('out.mp4').write_gif('out.gif')
             gif = open('out.gif', 'rb')
 
@@ -249,7 +261,7 @@ def style_model(request, rq_id, img_url):
         # url = "43.201.219.33:8000/showImg/" + rq_id + "/" + t_name
         imgUrl = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name
 
-        painting = Style(requestId=rq_id, tagName=t_name, imgUrl=imgUrl, img=img)
+        painting = Style(requestId=rq_id, tagName=t_name, tagUrl=imgUrl, img=img)
         painting.save()
 
     # get_url = "http://43.201.219.33:8000/api/picture/{}".format(rq_id)
