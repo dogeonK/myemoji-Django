@@ -241,28 +241,30 @@ def style_model(request, rq_id, img_url):
     image = download_image(url)
 
 
-    for p in Painting:
-        prompt = str(p.value)
-        images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5, guidance_scale=7).images
-        images[0].save("paintingStyle.png")
+    for i in range(1, 4):
+        for p in Painting:
+            prompt = str(p.value)
+            images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5,
+                          guidance_scale=7).images
+            images[0].save("paintingStyle.png")
 
-        input_path = 'paintingStyle.png'
-        output_path = 'outStyle.png'
+            input_path = 'paintingStyle.png'
+            output_path = 'outStyle.png'
 
-        input = Image.open(input_path)
-        output = remove(input)
-        output.save(output_path)
+            input = Image.open(input_path)
+            output = remove(input)
+            output.save(output_path)
 
-        img = open("outStyle.png", "rb")
+            img = open("outStyle.png", "rb")
 
-        t_name = p.value
-        img = base64.b64encode(img.read())
-        # url = "localhost:8000/showImg/" + rq_id + "/" + t_name
-        # url = "43.201.219.33:8000/showImg/" + rq_id + "/" + t_name
-        imgUrl = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name
+            t_name = p.value
+            img = base64.b64encode(img.read())
+            # url = "localhost:8000/showImg/" + rq_id + "/" + t_name
+            # url = "43.201.219.33:8000/showImg/" + rq_id + "/" + t_name
+            imgUrl = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name + "/" + str(i)
 
-        painting = Style(requestId=rq_id, tagName=t_name, tagUrl=imgUrl, img=img)
-        painting.save()
+            painting = Style(requestId=rq_id, tagName=t_name, tagUrl=imgUrl, img=img, setNum=i)
+            painting.save()
 
     # get_url = "http://43.201.219.33:8000/api/picture/{}".format(rq_id)
     get_url = "http://13.114.204.13:8000/api/picture/{}".format(rq_id)
@@ -284,8 +286,8 @@ def style(request, rq_id, img_url):
     return HttpResponse("success")
 
 
-def show_img(request, rq_id, t_name):
-    styles = Style.objects.filter(requestId=rq_id, tagName=t_name).values("img")
+def show_img(request, rq_id, t_name, s_num):
+    styles = Style.objects.filter(requestId=rq_id, tagName=t_name, setNum=int(s_num)).values("img")
     if styles.exists():
         base_string = styles.first()['img']
         img = Image.open(BytesIO(base64.b64decode(base_string)))

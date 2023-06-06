@@ -15,7 +15,7 @@ class Style(models.Model):
     tagName = models.CharField(max_length=50, null=False)
     tagUrl = models.CharField(max_length=256, null=False)
     img = models.BinaryField(null=False)
-
+    setNum = models.IntegerField(null=False)
     class Meta:
         db_table = 'style'
 

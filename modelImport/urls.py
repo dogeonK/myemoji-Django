@@ -33,7 +33,7 @@ urlpatterns = [
     # path("stable_model/<str:rq_id>/<str:img_url>/<str:paint>", stable_model),
     # path("tag_model/<str:rq_id>/<str:img_url>", style_model),
 
-    path("showImg/<str:rq_id>/<str:t_name>", show_img),
+    path("showImg/<str:rq_id>/<str:t_name>/<str:s_num>", show_img),
     path("showEmoji/<str:rq_id>/<str:t_name>/<str:e_name>/<str:s_num>", show_emoji),
     path("showEmojiGif/<str:rq_id>/<str:t_name>/<str:e_name>/<str:s_num>", show_emoji_gif),
 
