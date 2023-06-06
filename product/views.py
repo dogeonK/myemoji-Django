@@ -182,9 +182,9 @@ def stable_model(request, rq_id, img_url, paint):
             # url = "localhost:8000/showEmoji/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
             # url = "localhost:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
             # url = "43.201.219.33:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
-            url = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
+            emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
 
-            test = Emoji(requestId=rq_id, tagName=t_name, emojiTag=e_name, emojiUrl=url, emoji=gif, setNum=i)
+            test = Emoji(requestId=rq_id, tagName=t_name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i)
             test.save()
 
     get_url = "http://13.114.204.13:8000/api/emoji/{}".format(rq_id)
@@ -247,9 +247,9 @@ def style_model(request, rq_id, img_url):
         img = base64.b64encode(img.read())
         # url = "localhost:8000/showImg/" + rq_id + "/" + t_name
         # url = "43.201.219.33:8000/showImg/" + rq_id + "/" + t_name
-        url = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name
+        imgUrl = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name
 
-        painting = Style(requestId=rq_id, tagName=t_name, imgUrl=url, img=img)
+        painting = Style(requestId=rq_id, tagName=t_name, imgUrl=imgUrl, img=img)
         painting.save()
 
     # get_url = "http://43.201.219.33:8000/api/picture/{}".format(rq_id)
