@@ -1,4 +1,4 @@
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageChops
 from django.http import HttpResponse, HttpResponseNotFound, FileResponse, HttpResponseRedirect, JsonResponse
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -54,11 +54,11 @@ def test_reqeust(request):
 
 def stable_model(request, rq_id, img_url, paint):
     class Prompt(Enum):
-        a = "smile"
-        b = "angry"
-        c = "add a heart emoji"
-        d = "sad"
-        e = "yawn"
+        smile = "smile"
+        angry = "angry"
+        heart = "add a heart emoji"
+        sad = "sad"
+        yawn = "yawn"
 
     class Style_p(Enum):
         gogh = "gogh painting style"
@@ -166,8 +166,8 @@ def stable_model(request, rq_id, img_url, paint):
 
             # 이미지 파일 오픈
             wordImg = str(p.value) + ".png"
-            background = Image.open(wordImg)
-            foreground = Image.open("output.png")
+            background = Image.open("output.pne").convert("RGBA")
+            foreground = Image.open(wordImg).convert("RGBA")
 
             # 배경이 투명한 이미지 파일의 사이즈 가져오기
             (img_h, img_w) = foreground.size
@@ -175,10 +175,15 @@ def stable_model(request, rq_id, img_url, paint):
             # 합성할 배경 이미지를 위의 파일 사이즈로 resize
             resize_back = background.resize((img_h, img_w))
 
-            # 이미지 합성
-            resize_back.paste(foreground, (0, 0), foreground)
+            # 투명 마스트 생성
+            alpha_mask = foreground.split()[3]
 
-            resize_back.save("merge.png")
+            # 이미지 합성
+            # resize_back.paste(foreground, (0, 0), foreground)
+            merged_image = ImageChops.composite(foreground, resize_back, alpha_mask)
+
+            #resize_back.save("merge.png")
+            merged_image.save("merge.png")
 
             # img = open("merge.png", "rb") #gif 처리로 변환 -> 주석 처리
 
@@ -187,16 +192,16 @@ def stable_model(request, rq_id, img_url, paint):
             VideoFileClip('out.mp4').write_gif('out.gif')
             gif = open('out.gif', 'rb')
 
-            e_name = p.value
+            e_name = p.name
             # img = base64.b64encode(img.read())
             gif = base64.b64encode(gif.read())
 
             # url = "localhost:8000/showEmoji/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
             # url = "localhost:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
             # url = "43.201.219.33:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
-            emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
+            emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + s.name + "/" + e_name + "/" + str(i)
 
-            test = Emoji(requestId=rq_id, tagName=t_name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i)
+            test = Emoji(requestId=rq_id, tagName=s.name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i)
             test.save()
 
     get_url = "http://13.114.204.13:8000/api/emoji/{}".format(rq_id)
@@ -258,7 +263,7 @@ def style_model(request, rq_id, img_url):
 
             img = open("outStyle.png", "rb")
 
-            t_name = p.value
+            t_name = p.name
             img = base64.b64encode(img.read())
             # url = "localhost:8000/showImg/" + rq_id + "/" + t_name
             # url = "43.201.219.33:8000/showImg/" + rq_id + "/" + t_name
@@ -288,6 +293,7 @@ def style(request, rq_id, img_url):
 
 
 def show_img(request, rq_id, t_name, s_num):
+
     styles = Style.objects.filter(requestId=rq_id, tagName=t_name, setNum=int(s_num)).values("img")
     if styles.exists():
         base_string = styles.first()['img']
@@ -329,6 +335,7 @@ def show_emoji(request, rq_id, t_name, e_name, s_num):
 
 
 def show_emoji_gif(request, rq_id, t_name, e_name, s_num):
+
     emojis = Emoji.objects.filter(requestId=rq_id, tagName=t_name, emojiTag=e_name, setNum=int(s_num)).values(
         "emoji")
     if emojis.exists():
