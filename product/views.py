@@ -18,6 +18,64 @@ from image_tools.sizes import resize_and_crop
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from django.shortcuts import redirect
 import threading
+def download_image(url):
+    image = Image.open(requests.get(url, stream=True).raw)
+    image = ImageOps.exif_transpose(image)
+    image = image.convert("RGB")
+    return image
+
+# mp4 변환 메서드들
+def load_model(model_name):
+    model = interpolator.Interpolator(snapshot_download(repo_id=model_name), None)
+
+    return model
+
+model_id = "timbrooks/instruct-pix2pix"
+pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float16, safety_checker=None).to("cuda")
+
+model_name = "akhaliq/frame-interpolation-film-style"
+models = {model_name: load_model(model_name)}
+
+ffmpeg_path = util.get_ffmpeg_path()
+mediapy.set_ffmpeg(ffmpeg_path)
+
+
+def resize(width, img):
+    basewidth = width
+    img = Image.open(img)
+    wpercent = (basewidth / float(img.size[0]))
+    hsize = int((float(img.size[1]) * float(wpercent)))
+    img = img.resize((basewidth, hsize), Image.ANTIALIAS)
+    return img
+
+
+def resize_img(img1, img2):
+    img_target_size = Image.open(img1)
+    img_to_resize = resize_and_crop(
+        img2,
+        (img_target_size.size[0], img_target_size.size[1]),
+        crop_origin="middle"
+    )
+    img_to_resize.save('resized_img2.png')
+
+
+def predict(frame1, frame2, times_to_interpolate, model_name):
+    model = models[model_name]
+    frame1 = resize(256, frame1)
+    frame2 = resize(256, frame2)
+
+    frame1.save("test1.png")
+    frame2.save("test2.png")
+
+    resize_img("test1.png", "test2.png")
+    input_frames = ["test1.png", "resized_img2.png"]
+
+    frames = list(
+        util.interpolate_recursively_from_files(
+            input_frames, times_to_interpolate, model))
+
+    mediapy.write_video("out.mp4", frames, fps=30)
+
 def check(request):
     return HttpResponse("hihi")
 
@@ -65,19 +123,10 @@ def stable_model(request, rq_id, img_url, paint):
         sketch = "sketch"
         cartoon = "cartoon style"
 
-    model_id = "timbrooks/instruct-pix2pix"
-    pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float16).to("cuda")
-
     # url = "https://search.pstatic.net/sunny/?src=https%3A%2F%2Fmusicimage.xboxlive.com%2Fcatalog%2Fvideo.contributor.c41c6500-0200-11db-89ca-0019b92a3933%2Fimage%3Flocale%3Den-us%26target%3Dcircle&type=sc960_832"
 
     imgPath = "http://3.39.22.13:8080/imagePath/"
     url = imgPath + str(img_url)
-
-    def download_image(url):
-        image = Image.open(requests.get(url, stream=True).raw)
-        image = ImageOps.exif_transpose(image)
-        image = image.convert("RGB")
-        return image
 
     image = download_image(url)
     image.save("original.png")
@@ -90,52 +139,6 @@ def stable_model(request, rq_id, img_url, paint):
     output = remove(input)
     output.save(output_path)
 
-    # mp4 변환 메서드들
-    def load_model(model_name):
-        model = interpolator.Interpolator(snapshot_download(repo_id=model_name), None)
-
-        return model
-
-    model_name = "akhaliq/frame-interpolation-film-style"
-    models = {model_name: load_model(model_name)}
-
-    ffmpeg_path = util.get_ffmpeg_path()
-    mediapy.set_ffmpeg(ffmpeg_path)
-
-    def resize(width, img):
-        basewidth = width
-        img = Image.open(img)
-        wpercent = (basewidth / float(img.size[0]))
-        hsize = int((float(img.size[1]) * float(wpercent)))
-        img = img.resize((basewidth, hsize), Image.ANTIALIAS)
-        return img
-
-    def resize_img(img1, img2):
-        img_target_size = Image.open(img1)
-        img_to_resize = resize_and_crop(
-            img2,
-            (img_target_size.size[0], img_target_size.size[1]),
-            crop_origin="middle"
-        )
-        img_to_resize.save('resized_img2.png')
-
-    def predict(frame1, frame2, times_to_interpolate, model_name):
-        model = models[model_name]
-        frame1 = resize(256, frame1)
-        frame2 = resize(256, frame2)
-
-        frame1.save("test1.png")
-        frame2.save("test2.png")
-
-        resize_img("test1.png", "test2.png")
-        input_frames = ["test1.png", "resized_img2.png"]
-
-        frames = list(
-            util.interpolate_recursively_from_files(
-                input_frames, times_to_interpolate, model))
-
-        mediapy.write_video("out.mp4", frames, fps=30)
-
     for s in Style_p:
         if s.name == paint:
             t_name = s.value
@@ -147,7 +150,7 @@ def stable_model(request, rq_id, img_url, paint):
     # image = ImageOps.exif_transpose(image)
     # image = image.convert("RGB")
 
-    sfw_prompt = "Safe and SFW (Safe For Work) Image, Non-explicit and Family-friendly Picture"
+    # sfw_prompt = "Safe and SFW (Safe For Work) Image, Non-explicit and Family-friendly Picture"
 
     for i in range(1, 4):
         for p in Prompt:
@@ -155,6 +158,18 @@ def stable_model(request, rq_id, img_url, paint):
             images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5,
                           guidance_scale=7).images
             images[0].save("stable_pix2pix.png")
+
+            e_name = p.name
+
+            if pipe.nsfw_content_detected:
+                img = open("nsfw.png", "rb")
+
+                gif = base64.b64encode(img.read())
+                emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + s.name + "/" + e_name + "/" + str(i)
+
+                test = Emoji(requestId=rq_id, tagName=s.name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i)
+                test.save()
+                continue
 
             # remove background
             input_path = 'stable_pix2pix.png'
@@ -192,7 +207,7 @@ def stable_model(request, rq_id, img_url, paint):
             VideoFileClip('out.mp4').write_gif('out.gif')
             gif = open('out.gif', 'rb')
 
-            e_name = p.name
+            # e_name = p.name
             # img = base64.b64encode(img.read())
             gif = base64.b64encode(gif.read())
 
@@ -226,9 +241,6 @@ def style_model(request, rq_id, img_url):
         sketch = "sketch"
         cartoon = "cartoon style"
 
-    model_id = "timbrooks/instruct-pix2pix"
-    pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float16).to("cuda")
-
     # url = "https://search.pstatic.net/sunny/?src=https%3A%2F%2Fmusicimage.xboxlive.com%2Fcatalog%2Fvideo.contributor.c41c6500-0200-11db-89ca-0019b92a3933%2Fimage%3Flocale%3Den-us%26target%3Dcircle&type=sc960_832"
     # print("style_model start")
     # print(rq_id)
@@ -236,12 +248,6 @@ def style_model(request, rq_id, img_url):
     imgPath = "http://3.39.22.13:8080/imagePath/"
     url = str(imgPath) + str(img_url)
     # print(url)
-
-    def download_image(url):
-        image = Image.open(requests.get(url, stream=True).raw)
-        image = ImageOps.exif_transpose(image)
-        image = image.convert("RGB")
-        return image
 
     image = download_image(url)
 
@@ -254,6 +260,17 @@ def style_model(request, rq_id, img_url):
                           guidance_scale=7).images
             images[0].save("paintingStyle.png")
 
+            t_name = p.name
+
+            if pipe.nsfw_content_detected:
+                img = open("nsfw.png", "rb")
+                img = base64.b64encode(img.read())
+                imgUrl = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name + "/" + str(i)
+
+                painting = Style(requestId=rq_id, tagName=t_name, tagUrl=imgUrl, img=img, setNum=i)
+                painting.save()
+                continue
+
             input_path = 'paintingStyle.png'
             output_path = 'outStyle.png'
 
@@ -263,7 +280,7 @@ def style_model(request, rq_id, img_url):
 
             img = open("outStyle.png", "rb")
 
-            t_name = p.name
+            # t_name = p.name
             img = base64.b64encode(img.read())
             # url = "localhost:8000/showImg/" + rq_id + "/" + t_name
             # url = "43.201.219.33:8000/showImg/" + rq_id + "/" + t_name
