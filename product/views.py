@@ -224,7 +224,9 @@ def stable_model(request, rq_id, img_url, paint):
             for p in Prompt:
                 future = executor.submit(process_image, rq_id, p, image, t_name, s.name)
                 futures.append(future)
-        concurrent.futures.wait(futures)
+            for future in concurrent.futures.as_completed(futures):
+                result = future.result()
+        # concurrent.futures.wait(futures)
 
     get_url = "http://13.114.204.13:8000/api/emoji/{}".format(rq_id)
     response = requests.get(get_url)
@@ -306,7 +308,10 @@ def style_model(request, rq_id, img_url):
                 future = executor.submit(process_painting, p, image, rq_id, p.name, i)
                 futures.append(future)
 
-        concurrent.futures.wait(futures)
+            for future in concurrent.futures.as_completed(futures):
+                result = future.result()
+
+        # concurrent.futures.wait(futures)
 
     # get_url = "http://43.201.219.33:8000/api/picture/{}".format(rq_id)
     get_url = "http://13.114.204.13:8000/api/picture/{}".format(rq_id)
