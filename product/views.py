@@ -18,6 +18,7 @@ from image_tools.sizes import resize_and_crop
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from django.shortcuts import redirect
 import threading
+import concurrent.futures
 def download_image(url):
     image = Image.open(requests.get(url, stream=True).raw)
     image = ImageOps.exif_transpose(image)
@@ -152,72 +153,79 @@ def stable_model(request, rq_id, img_url, paint):
 
     # sfw_prompt = "Safe and SFW (Safe For Work) Image, Non-explicit and Family-friendly Picture"
 
-    for i in range(1, 4):
-        for p in Prompt:
-            prompt = str(p.value) + ", " + str(t_name)
-            images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5,
-                          guidance_scale=7).images
-            images[0].save("stable_pix2pix.png")
+    def process_image(rq_id, p, image, t_name, s_name, i):
+        prompt = str(p.value) + ", " + str(t_name)
+        images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5,
+                      guidance_scale=7).images
+        images[0].save("stable_pix2pix.png")
 
-            e_name = p.name
+        e_name = p.name
 
-            if pipe.nsfw_content_detected:
-                img = open("nsfw.png", "rb")
+        if pipe.nsfw_content_detected:
+            img = open("nsfw.png", "rb")
 
-                gif = base64.b64encode(img.read())
-                emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + s.name + "/" + e_name + "/" + str(i)
+            nsfw = base64.b64encode(img.read())
+            emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + s_name + "/" + e_name + "/" + str(i)
 
-                test = Emoji(requestId=rq_id, tagName=s.name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i)
-                test.save()
-                continue
-
-            # remove background
-            input_path = 'stable_pix2pix.png'
-            output_path = 'output.png'
-
-            input = Image.open(input_path)
-            output = remove(input)
-            output.save(output_path)
-
-            # 이미지 파일 오픈
-            wordImg = str(p.value) + ".png"
-            background = Image.open("output.pne").convert("RGBA")
-            foreground = Image.open(wordImg).convert("RGBA")
-
-            # 배경이 투명한 이미지 파일의 사이즈 가져오기
-            (img_h, img_w) = foreground.size
-
-            # 합성할 배경 이미지를 위의 파일 사이즈로 resize
-            resize_back = background.resize((img_h, img_w))
-
-            # 투명 마스트 생성
-            alpha_mask = foreground.split()[3]
-
-            # 이미지 합성
-            # resize_back.paste(foreground, (0, 0), foreground)
-            merged_image = ImageChops.composite(foreground, resize_back, alpha_mask)
-
-            #resize_back.save("merge.png")
-            merged_image.save("merge.png")
-
-            # img = open("merge.png", "rb") #gif 처리로 변환 -> 주석 처리
-
-            # mp4 생성 후 -> gif 변경
-            predict("original_rmbg.png", "merge.png", 3, model_name)
-            VideoFileClip('out.mp4').write_gif('out.gif')
-            gif = open('out.gif', 'rb')
-
-            # e_name = p.name
-            # img = base64.b64encode(img.read())
-            gif = base64.b64encode(gif.read())
-
-            # url = "localhost:8000/showEmoji/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
-            # url = "localhost:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
-            # url = "43.201.219.33:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
-            emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + s.name + "/" + e_name + "/" + str(i)
-
-            test = Emoji(requestId=rq_id, tagName=s.name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i)
+            test = Emoji(requestId=rq_id, tagName=s.name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=nsfw, setNum=i)
             test.save()
+            return
+
+        # remove background
+        input_path = 'stable_pix2pix.png'
+        output_path = 'output.png'
+
+        input = Image.open(input_path)
+        output = remove(input)
+        output.save(output_path)
+
+        # 이미지 파일 오픈
+        wordImg = str(p.value) + ".png"
+        background = Image.open("output.pne").convert("RGBA")
+        foreground = Image.open(wordImg).convert("RGBA")
+
+        # 배경이 투명한 이미지 파일의 사이즈 가져오기
+        (img_h, img_w) = foreground.size
+
+        # 합성할 배경 이미지를 위의 파일 사이즈로 resize
+        resize_back = background.resize((img_h, img_w))
+
+        # 투명 마스트 생성
+        alpha_mask = foreground.split()[3]
+
+        # 이미지 합성
+        # resize_back.paste(foreground, (0, 0), foreground)
+        merged_image = ImageChops.composite(foreground, resize_back, alpha_mask)
+
+        # resize_back.save("merge.png")
+        merged_image.save("merge.png")
+
+        # img = open("merge.png", "rb") #gif 처리로 변환 -> 주석 처리
+
+        # mp4 생성 후 -> gif 변경
+        predict("original_rmbg.png", "merge.png", 3, model_name)
+        VideoFileClip('out.mp4').write_gif('out.gif')
+        gif = open('out.gif', 'rb')
+
+        # e_name = p.name
+        # img = base64.b64encode(img.read())
+        gif = base64.b64encode(gif.read())
+
+        # url = "localhost:8000/showEmoji/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
+        # url = "localhost:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
+        # url = "43.201.219.33:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
+        emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + s.name + "/" + e_name + "/" + str(i)
+
+        test = Emoji(requestId=rq_id, tagName=s.name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i)
+        test.save()
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = []
+        for i in range(1, 4):
+            for p in Prompt:
+                future = executor.submit(process_image, rq_id, p, image, t_name, s.name)
+                futures.append(future)
+        concurrent.futures.wait(futures)
 
     get_url = "http://13.114.204.13:8000/api/emoji/{}".format(rq_id)
     response = requests.get(get_url)
@@ -253,41 +261,49 @@ def style_model(request, rq_id, img_url):
 
     sfw_prompt = "Safe and SFW (Safe For Work) Image, Non-explicit and Family-friendly Picture"
 
-    for i in range(1, 4):
-        for p in Painting:
-            prompt = str(p.value)
-            images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5,
-                          guidance_scale=7).images
-            images[0].save("paintingStyle.png")
+    def process_painting(p, image, rq_id, t_name, i):
+        prompt = str(p.value)
+        images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5,
+                      guidance_scale=7).images
+        images[0].save("paintingStyle.png")
 
-            t_name = p.name
+        t_name = p.name
 
-            if pipe.nsfw_content_detected:
-                img = open("nsfw.png", "rb")
-                img = base64.b64encode(img.read())
-                imgUrl = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name + "/" + str(i)
-
-                painting = Style(requestId=rq_id, tagName=t_name, tagUrl=imgUrl, img=img, setNum=i)
-                painting.save()
-                continue
-
-            input_path = 'paintingStyle.png'
-            output_path = 'outStyle.png'
-
-            input = Image.open(input_path)
-            output = remove(input)
-            output.save(output_path)
-
-            img = open("outStyle.png", "rb")
-
-            # t_name = p.name
+        if pipe.nsfw_content_detected:
+            img = open("nsfw.png", "rb")
             img = base64.b64encode(img.read())
-            # url = "localhost:8000/showImg/" + rq_id + "/" + t_name
-            # url = "43.201.219.33:8000/showImg/" + rq_id + "/" + t_name
             imgUrl = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name + "/" + str(i)
 
             painting = Style(requestId=rq_id, tagName=t_name, tagUrl=imgUrl, img=img, setNum=i)
             painting.save()
+            return
+
+        input_path = 'paintingStyle.png'
+        output_path = 'outStyle.png'
+
+        input = Image.open(input_path)
+        output = remove(input)
+        output.save(output_path)
+
+        img = open("outStyle.png", "rb")
+
+        # t_name = p.name
+        img = base64.b64encode(img.read())
+        # url = "localhost:8000/showImg/" + rq_id + "/" + t_name
+        # url = "43.201.219.33:8000/showImg/" + rq_id + "/" + t_name
+        imgUrl = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name + "/" + str(i)
+
+        painting = Style(requestId=rq_id, tagName=t_name, tagUrl=imgUrl, img=img, setNum=i)
+        painting.save()
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = []
+        for i in range(1, 4):
+            for p in Painting:
+                future = executor.submit(process_painting, p, image, rq_id, p.name, i)
+                futures.append(future)
+
+        concurrent.futures.wait(futures)
 
     # get_url = "http://43.201.219.33:8000/api/picture/{}".format(rq_id)
     get_url = "http://13.114.204.13:8000/api/picture/{}".format(rq_id)
