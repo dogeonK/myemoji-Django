@@ -218,15 +218,21 @@ def stable_model(request, rq_id, img_url, paint):
         test = Emoji(requestId=rq_id, tagName=s.name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i)
         test.save()
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = []
-        for i in range(1, 4):
-            for p in Prompt:
-                future = executor.submit(process_image, rq_id, p, image, t_name, s.name)
-                futures.append(future)
-            for future in concurrent.futures.as_completed(futures):
-                result = future.result()
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     futures = []
+    #     for i in range(1, 4):
+    #         for p in Prompt:
+    #             future = executor.submit(process_image, rq_id, p, image, t_name, s.name)
+    #             futures.append(future)
+    #         for future in concurrent.futures.as_completed(futures):
+    #             result = future.result()
         # concurrent.futures.wait(futures)
+    threads = []
+    for i in range(1, 4):
+        for p in Prompt:
+            thread = threading.Thread(target=process_image, args=(rq_id, p, image, t_name, s.name, i))
+            thread.start()
+            threads.append(thread)
 
     get_url = "http://13.114.204.13:8000/api/emoji/{}".format(rq_id)
     response = requests.get(get_url)
@@ -301,17 +307,22 @@ def style_model(request, rq_id, img_url):
         painting = Style(requestId=rq_id, tagName=t_name, tagUrl=imgUrl, img=img, setNum=i)
         painting.save()
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = []
-        for i in range(1, 4):
-            for p in Painting:
-                future = executor.submit(process_painting, p, image, rq_id, p.name, i)
-                futures.append(future)
-
-            for future in concurrent.futures.as_completed(futures):
-                result = future.result()
-
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     futures = []
+    #     for i in range(1, 4):
+    #         for p in Painting:
+    #             future = executor.submit(process_painting, p, image, rq_id, p.name, i)
+    #             futures.append(future)
+    #
+    #         for future in concurrent.futures.as_completed(futures):
+    #             result = future.result()
         # concurrent.futures.wait(futures)
+    threads = []
+    for i in range(1, 4):
+        for p in Painting:
+            thread = threading.Thread(target=process_painting, args=(p, image, rq_id, p.name, i))
+            thread.start()
+            threads.append(thread)
 
     # get_url = "http://43.201.219.33:8000/api/picture/{}".format(rq_id)
     get_url = "http://13.114.204.13:8000/api/picture/{}".format(rq_id)
