@@ -31,16 +31,6 @@ def load_model(model_name):
 
     return model
 
-model_id = "timbrooks/instruct-pix2pix"
-pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float16, safety_checker=None).to("cuda")
-
-model_name = "akhaliq/frame-interpolation-film-style"
-models = {model_name: load_model(model_name)}
-
-ffmpeg_path = util.get_ffmpeg_path()
-mediapy.set_ffmpeg(ffmpeg_path)
-
-
 def resize(width, img):
     basewidth = width
     img = Image.open(img)
@@ -124,6 +114,9 @@ def stable_model(request, rq_id, img_url, paint):
         sketch = "sketch"
         cartoon = "cartoon style"
 
+    model_id = "timbrooks/instruct-pix2pix"
+    pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float16,
+                                                                  safety_checker=None).to("cuda")
     # url = "https://search.pstatic.net/sunny/?src=https%3A%2F%2Fmusicimage.xboxlive.com%2Fcatalog%2Fvideo.contributor.c41c6500-0200-11db-89ca-0019b92a3933%2Fimage%3Flocale%3Den-us%26target%3Dcircle&type=sc960_832"
 
     imgPath = "http://3.39.22.13:8080/imagePath/"
@@ -202,6 +195,12 @@ def stable_model(request, rq_id, img_url, paint):
 
         # img = open("merge.png", "rb") #gif 처리로 변환 -> 주석 처리
 
+        model_name = "akhaliq/frame-interpolation-film-style"
+        models = {model_name: load_model(model_name)}
+
+        ffmpeg_path = util.get_ffmpeg_path()
+        mediapy.set_ffmpeg(ffmpeg_path)
+
         # mp4 생성 후 -> gif 변경
         predict("original_rmbg.png", "merge.png", 3, model_name)
         VideoFileClip('out.mp4').write_gif('out.gif')
@@ -249,6 +248,9 @@ def style_model(request, rq_id, img_url):
         sketch = "sketch"
         cartoon = "cartoon style"
 
+    model_id = "timbrooks/instruct-pix2pix"
+    pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float16,
+                                                                  safety_checker=None).to("cuda")
     # url = "https://search.pstatic.net/sunny/?src=https%3A%2F%2Fmusicimage.xboxlive.com%2Fcatalog%2Fvideo.contributor.c41c6500-0200-11db-89ca-0019b92a3933%2Fimage%3Flocale%3Den-us%26target%3Dcircle&type=sc960_832"
     # print("style_model start")
     # print(rq_id)
@@ -260,8 +262,9 @@ def style_model(request, rq_id, img_url):
     image = download_image(url)
 
     sfw_prompt = "Safe and SFW (Safe For Work) Image, Non-explicit and Family-friendly Picture"
-
+    print("style model request")
     def process_painting(p, image, rq_id, t_name, i):
+        print("process_painting {}".format(i))
         prompt = str(p.value)
         images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5,
                       guidance_scale=7).images
@@ -319,6 +322,7 @@ def style(request, rq_id, img_url):
     if exists:
         return HttpResponse("exist")
 
+    print("style request")
     style_thread = threading.Thread(target=style_model, args=(request, rq_id, img_url))
     style_thread.start()
 
