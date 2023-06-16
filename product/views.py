@@ -146,27 +146,102 @@ def stable_model(request, rq_id, img_url, paint):
 
     # sfw_prompt = "Safe and SFW (Safe For Work) Image, Non-explicit and Family-friendly Picture"
 
-    for i in range(1, 4):
-        for p in Prompt:
-            prompt = str(p.value) + ", " + str(t_name)
-            images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5,
-                          guidance_scale=7).images
-            images[0].save("stable_pix2pix.png")
+    # for i in range(1, 4):
+    #     for p in Prompt:
+    #         prompt = str(p.value) + ", " + str(t_name)
+    #         images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5,
+    #                       guidance_scale=7).images
+    #         images[0].save("stable_pix2pix.png")
+    #
+    #         e_name = p.name
+    #
+    #         # if pipe.nsfw_content_detected:
+    #         #     img = open("nsfw.png", "rb")
+    #         #
+    #         #     nsfw = base64.b64encode(img.read())
+    #         #     emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + s.name + "/" + e_name + "/" + str(i)
+    #         #
+    #         #     test = Emoji(requestId=rq_id, tagName=s.name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=nsfw, setNum=i)
+    #         #     test.save()
+    #         #     continue
+    #
+    #         # remove background
+    #         input_path = 'stable_pix2pix.png'
+    #         output_path = 'output.png'
+    #
+    #         input = Image.open(input_path)
+    #         output = remove(input)
+    #         output.save(output_path)
+    #
+    #         # 이미지 파일 오픈
+    #         wordImg = str(p.value) + ".png"
+    #         background = Image.open("output.pne").convert("RGBA")
+    #         foreground = Image.open(wordImg).convert("RGBA")
+    #
+    #         # 배경이 투명한 이미지 파일의 사이즈 가져오기
+    #         (img_h, img_w) = foreground.size
+    #
+    #         # 합성할 배경 이미지를 위의 파일 사이즈로 resize
+    #         resize_back = background.resize((img_h, img_w))
+    #
+    #         # 투명 마스트 생성
+    #         alpha_mask = foreground.split()[3]
+    #
+    #         # 이미지 합성
+    #         # resize_back.paste(foreground, (0, 0), foreground)
+    #         merged_image = ImageChops.composite(foreground, resize_back, alpha_mask)
+    #
+    #         # resize_back.save("merge.png")
+    #         merged_image.save("merge.png")
+    #
+    #         # img = open("merge.png", "rb") #gif 처리로 변환 -> 주석 처리
+    #
+    #         model_name = "akhaliq/frame-interpolation-film-style"
+    #         models = {model_name: load_model(model_name)}
+    #
+    #         ffmpeg_path = util.get_ffmpeg_path()
+    #         mediapy.set_ffmpeg(ffmpeg_path)
+    #
+    #         # mp4 생성 후 -> gif 변경
+    #         predict("original_rmbg.png", "merge.png", 3, model_name)
+    #         VideoFileClip('out.mp4').write_gif('out.gif')
+    #         gif = open('out.gif', 'rb')
+    #
+    #         # e_name = p.name
+    #         # img = base64.b64encode(img.read())
+    #         gif = base64.b64encode(gif.read())
+    #
+    #         # url = "localhost:8000/showEmoji/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
+    #         # url = "localhost:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
+    #         # url = "43.201.219.33:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
+    #         emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + s.name + "/" + e_name + "/" + str(i)
+    #
+    #         test = Emoji(requestId=rq_id, tagName=s.name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i)
+    #         test.save()
 
-            e_name = p.name
+    for p in Prompt:
+        prompt = str(p.value) + ", " + str(t_name)
+        images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5,
+                      guidance_scale=7, num_images_per_prompt=3).images
+        images[0].save("stable_pix2pix_1.png")
+        images[1].save("stable_pix2pix_2.png")
+        images[2].save("stable_pix2pix_3.png")
 
-            if pipe.nsfw_content_detected:
-                img = open("nsfw.png", "rb")
+        e_name = p.name
 
-                nsfw = base64.b64encode(img.read())
-                emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + s.name + "/" + e_name + "/" + str(i)
-
-                test = Emoji(requestId=rq_id, tagName=s.name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=nsfw, setNum=i)
-                test.save()
-                continue
+        for i in range(3):
+            # if pipe.nsfw_content_detected:
+            #     img = open("nsfw.png", "rb")
+            #
+            #     nsfw = base64.b64encode(img.read())
+            #     emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + s.name + "/" + e_name + "/" + str(i)
+            #
+            #     test = Emoji(requestId=rq_id, tagName=s.name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=nsfw, setNum=i)
+            #     test.save()
+            #     continue
 
             # remove background
-            input_path = 'stable_pix2pix.png'
+            input_path = 'stable_pix2pix_{}.png'.format(i+1)
             output_path = 'output.png'
 
             input = Image.open(input_path)
@@ -175,7 +250,7 @@ def stable_model(request, rq_id, img_url, paint):
 
             # 이미지 파일 오픈
             wordImg = str(p.value) + ".png"
-            background = Image.open("output.pne").convert("RGBA")
+            background = Image.open("output.png").convert("RGBA")
             foreground = Image.open(wordImg).convert("RGBA")
 
             # 배경이 투명한 이미지 파일의 사이즈 가져오기
@@ -214,9 +289,9 @@ def stable_model(request, rq_id, img_url, paint):
             # url = "localhost:8000/showEmoji/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
             # url = "localhost:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
             # url = "43.201.219.33:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
-            emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + s.name + "/" + e_name + "/" + str(i)
+            emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + s.name + "/" + e_name + "/" + str(i+1)
 
-            test = Emoji(requestId=rq_id, tagName=s.name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i)
+            test = Emoji(requestId=rq_id, tagName=s.name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i+1)
             test.save()
 
     get_url = "http://13.114.204.13:8000/api/emoji/{}".format(rq_id)
@@ -256,25 +331,62 @@ def style_model(request, rq_id, img_url):
 
     sfw_prompt = "Safe and SFW (Safe For Work) Image, Non-explicit and Family-friendly Picture"
 
-    for i in range(1, 4):
-        for p in Painting:
-            prompt = str(p.value)
-            images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5,
-                          guidance_scale=7).images
-            images[0].save("paintingStyle.png")
+    # for i in range(1, 4):
+    #     for p in Painting:
+    #         prompt = str(p.value)
+    #         images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5,
+    #                       guidance_scale=7).images
+    #         images[0].save("paintingStyle.png")
+    #
+    #         t_name = p.name
+    #
+    #         if pipe.nsfw_content_detected:
+    #             img = open("nsfw.png", "rb")
+    #             img = base64.b64encode(img.read())
+    #             imgUrl = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name + "/" + str(i)
+    #
+    #             painting = Style(requestId=rq_id, tagName=t_name, tagUrl=imgUrl, img=img, setNum=i)
+    #             painting.save()
+    #             continue
+    #
+    #         input_path = 'paintingStyle.png'
+    #         output_path = 'outStyle.png'
+    #
+    #         input = Image.open(input_path)
+    #         output = remove(input)
+    #         output.save(output_path)
+    #
+    #         img = open("outStyle.png", "rb")
+    #
+    #         # t_name = p.name
+    #         img = base64.b64encode(img.read())
+    #         # url = "localhost:8000/showImg/" + rq_id + "/" + t_name
+    #         # url = "43.201.219.33:8000/showImg/" + rq_id + "/" + t_name
+    #         imgUrl = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name + "/" + str(i)
+    #
+    #         painting = Style(requestId=rq_id, tagName=t_name, tagUrl=imgUrl, img=img, setNum=i)
+    #         painting.save()
+    for p in Painting:
+        prompt = str(p.value)
+        images = pipe(prompt, image=image, num_inference_steps=20, image_guidance_scale=1.5,
+                      guidance_scale=7, num_images_per_prompt=3).images
+        images[0].save("paintingStyle_1.png")
+        images[1].save("paintingStyle_2.png")
+        images[2].save("paintingStyle_3.png")
 
-            t_name = p.name
+        t_name = p.name
 
-            if pipe.nsfw_content_detected:
-                img = open("nsfw.png", "rb")
-                img = base64.b64encode(img.read())
-                imgUrl = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name + "/" + str(i)
+        for i in range(3):
+            # if images.nsfw_content_detected[i]:
+            #     img = open("nsfw.png", "rb")
+            #     img = base64.b64encode(img.read())
+            #     imgUrl = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name + "/" + str(i+1)
+            #
+            #     painting = Style(requestId=rq_id, tagName=t_name, tagUrl=imgUrl, img=img, setNum=i+1)
+            #     painting.save()
+            #     continue
 
-                painting = Style(requestId=rq_id, tagName=t_name, tagUrl=imgUrl, img=img, setNum=i)
-                painting.save()
-                continue
-
-            input_path = 'paintingStyle.png'
+            input_path = 'paintingStyle_{}.png'.format(i+1)
             output_path = 'outStyle.png'
 
             input = Image.open(input_path)
@@ -287,10 +399,11 @@ def style_model(request, rq_id, img_url):
             img = base64.b64encode(img.read())
             # url = "localhost:8000/showImg/" + rq_id + "/" + t_name
             # url = "43.201.219.33:8000/showImg/" + rq_id + "/" + t_name
-            imgUrl = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name + "/" + str(i)
+            imgUrl = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name + "/" + str(i+1)
 
-            painting = Style(requestId=rq_id, tagName=t_name, tagUrl=imgUrl, img=img, setNum=i)
+            painting = Style(requestId=rq_id, tagName=t_name, tagUrl=imgUrl, img=img, setNum=i+1)
             painting.save()
+
 
     # get_url = "http://43.201.219.33:8000/api/picture/{}".format(rq_id)
     get_url = "http://13.114.204.13:8000/api/picture/{}".format(rq_id)
