@@ -119,6 +119,8 @@ def stable_model(request, rq_id, img_url, paint):
                                                                   safety_checker=None).to("cuda")
     # url = "https://search.pstatic.net/sunny/?src=https%3A%2F%2Fmusicimage.xboxlive.com%2Fcatalog%2Fvideo.contributor.c41c6500-0200-11db-89ca-0019b92a3933%2Fimage%3Flocale%3Den-us%26target%3Dcircle&type=sc960_832"
 
+    emoji_loading = 0
+
     imgPath = "http://3.39.22.13:8080/imagePath/"
     url = imgPath + str(img_url)
 
@@ -294,6 +296,11 @@ def stable_model(request, rq_id, img_url, paint):
             test = Emoji(requestId=rq_id, tagName=s.name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i+1)
             test.save()
 
+            # 로딩 퍼센트 6 * 15
+            # emoji_loading += 6
+            # post_url = "http://3.39.22.13:8080/"
+            # requests.post(post_url, data=emoji_loading)
+
     get_url = "http://13.114.204.13:8000/api/emoji/{}".format(rq_id)
     response = requests.get(get_url)
     return response
@@ -330,6 +337,8 @@ def style_model(request, rq_id, img_url):
     image = download_image(url)
 
     sfw_prompt = "Safe and SFW (Safe For Work) Image, Non-explicit and Family-friendly Picture"
+
+    tag_loading = 0
 
     # for i in range(1, 4):
     #     for p in Painting:
@@ -403,6 +412,11 @@ def style_model(request, rq_id, img_url):
 
             painting = Style(requestId=rq_id, tagName=t_name, tagUrl=imgUrl, img=img, setNum=i+1)
             painting.save()
+
+            # 로딩 퍼센트 11 * 9
+            # tag_loading += 11
+            # post_url = "http://3.39.22.13:8080/"
+            # requests.post(post_url, data=tag_loading)
 
 
     # get_url = "http://43.201.219.33:8000/api/picture/{}".format(rq_id)
