@@ -273,16 +273,24 @@ def stable_model(request, rq_id, img_url, paint):
             merged_image = ImageChops.composite(foreground, resize_back, alpha_mask)
 
             # resize_back.save("merge.png")
-            merged_image.save("merge.png")
+            # merged_image.save("merge.png")
 
             # img = open("merge.png", "rb") #gif 처리로 변환 -> 주석 처리
 
+            #gif 변경 시 잘 안보임 -> merge.png 뒤에 흰색 배경 추가
+            # 흰 배경 생성
+            white_background = Image.new("RGBA", (img_h, img_w), (255, 255, 255, 255))
+            #merge.png white_background 합성
+            merged_white = Image.alpha_composite(white_background, merged_image)
+            #저장
+            merged_white.save("merge_with_white_bg.png")
 
             ffmpeg_path = util.get_ffmpeg_path()
             mediapy.set_ffmpeg(ffmpeg_path)
 
             # mp4 생성 후 -> gif 변경
-            predict("original_rmbg.png", "merge.png", 3, model_name)
+            #merge.png에서 뒤에 흰 배경을 추가해야 할 듯
+            predict("original.png", "merge_with_white_bg.png", 3, model_name)
             VideoFileClip('out.mp4').write_gif('out.gif')
             gif = open('out.gif', 'rb')
 
