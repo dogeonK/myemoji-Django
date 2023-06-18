@@ -19,6 +19,7 @@ from moviepy.video.io.VideoFileClip import VideoFileClip
 from django.shortcuts import redirect
 import threading
 import concurrent.futures
+
 def download_image(url):
     image = Image.open(requests.get(url, stream=True).raw)
     image = ImageOps.exif_transpose(image)
@@ -30,6 +31,9 @@ def load_model(model_name):
     model = interpolator.Interpolator(snapshot_download(repo_id=model_name), None)
 
     return model
+
+model_name = "akhaliq/frame-interpolation-film-style"
+models = {model_name: load_model(model_name)}
 
 def resize(width, img):
     basewidth = width
@@ -273,8 +277,6 @@ def stable_model(request, rq_id, img_url, paint):
 
             # img = open("merge.png", "rb") #gif 처리로 변환 -> 주석 처리
 
-            model_name = "akhaliq/frame-interpolation-film-style"
-            models = {model_name: load_model(model_name)}
 
             ffmpeg_path = util.get_ffmpeg_path()
             mediapy.set_ffmpeg(ffmpeg_path)
