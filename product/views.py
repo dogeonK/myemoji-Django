@@ -20,11 +20,13 @@ from django.shortcuts import redirect
 import threading
 import concurrent.futures
 
+
 def download_image(url):
     image = Image.open(requests.get(url, stream=True).raw)
     image = ImageOps.exif_transpose(image)
     image = image.convert("RGB")
     return image
+
 
 # mp4 변환 메서드들
 def load_model(model_name):
@@ -32,8 +34,10 @@ def load_model(model_name):
 
     return model
 
+
 model_name = "akhaliq/frame-interpolation-film-style"
 models = {model_name: load_model(model_name)}
+
 
 def resize(width, img):
     basewidth = width
@@ -71,6 +75,7 @@ def predict(frame1, frame2, times_to_interpolate, model_name):
 
     mediapy.write_video("out.mp4", frames, fps=30)
 
+
 def check(request):
     return HttpResponse("hihi")
 
@@ -105,7 +110,8 @@ class EmojiAPI(APIView):
 def test_reqeust(request):
     return HttpResponse("success!");
 
-def stable_model(request, rq_id, img_url, paint):
+
+def stable_model(request, rq_id, emojiRequestId, img_url, paint):
     class Prompt(Enum):
         smile = "smile"
         angry = "angry"
@@ -247,7 +253,7 @@ def stable_model(request, rq_id, img_url, paint):
             #     continue
 
             # remove background
-            input_path = 'stable_pix2pix_{}.png'.format(i+1)
+            input_path = 'stable_pix2pix_{}.png'.format(i + 1)
             output_path = 'output.png'
 
             input = Image.open(input_path)
@@ -277,19 +283,19 @@ def stable_model(request, rq_id, img_url, paint):
 
             # img = open("merge.png", "rb") #gif 처리로 변환 -> 주석 처리
 
-            #gif 변경 시 잘 안보임 -> merge.png 뒤에 흰색 배경 추가
+            # gif 변경 시 잘 안보임 -> merge.png 뒤에 흰색 배경 추가
             # 흰 배경 생성
             white_background = Image.new("RGBA", (img_h, img_w), (255, 255, 255, 255))
-            #merge.png white_background 합성
+            # merge.png white_background 합성
             merged_white = Image.alpha_composite(white_background, merged_image)
-            #저장
+            # 저장
             merged_white.save("merge_with_white_bg.png")
 
             ffmpeg_path = util.get_ffmpeg_path()
             mediapy.set_ffmpeg(ffmpeg_path)
 
             # mp4 생성 후 -> gif 변경
-            #merge.png에서 뒤에 흰 배경을 추가해야 할 듯
+            # merge.png에서 뒤에 흰 배경을 추가해야 할 듯
             predict("original.png", "merge_with_white_bg.png", 3, model_name)
             VideoFileClip('out.mp4').write_gif('out.gif')
             gif = open('out.gif', 'rb')
@@ -301,31 +307,38 @@ def stable_model(request, rq_id, img_url, paint):
             # url = "localhost:8000/showEmoji/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
             # url = "localhost:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
             # url = "43.201.219.33:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
-            emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + s.name + "/" + e_name + "/" + str(i+1)
+            emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + s.name + "/" + e_name + "/" + str(i + 1)
 
-            test = Emoji(requestId=rq_id, tagName=s.name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i+1)
+            test = Emoji(requestId=rq_id, tagName=s.name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i + 1)
             test.save()
 
             # 로딩 퍼센트 6 * 15
-            # emoji_loading += 6
-            # post_url = "http://3.39.22.13:8080/"
-            # requests.post(post_url, data=emoji_loading)
+            emoji_loading += 6
+            post_url = "http://3.39.22.13:8080/emoji/load"
+
+            data = {
+                "emojiRequestId": emojiRequestId,
+                "wait": emoji_loading
+            }
+            requests.post(post_url, json=data)
 
     get_url = "http://13.114.204.13:8000/api/emoji/{}".format(rq_id)
     response = requests.get(get_url)
     return response
 
-def stable(request, rq_id, img_url, paint):
+
+def stable(request, rq_id, emojiRequestId, img_url, paint):
     if not rq_id:
         return HttpResponse("fail")
 
-    if Emoji.objects.filter(requestId=rq_id).exists():
-        return HttpResponse("exist")
+    # if Emoji.objects.filter(requestId=rq_id).exists():
+    #     return HttpResponse("exist")
 
-    emoji_thread = threading.Thread(target=stable_model, args=(request, rq_id, img_url, paint))
+    emoji_thread = threading.Thread(target=stable_model, args=(request, rq_id, emojiRequestId, img_url, paint))
     emoji_thread.start()
 
     return HttpResponse("success")
+
 
 def style_model(request, rq_id, img_url):
     class Painting(Enum):
@@ -405,7 +418,7 @@ def style_model(request, rq_id, img_url):
             #     painting.save()
             #     continue
 
-            input_path = 'paintingStyle_{}.png'.format(i+1)
+            input_path = 'paintingStyle_{}.png'.format(i + 1)
             output_path = 'outStyle.png'
 
             input = Image.open(input_path)
@@ -418,21 +431,26 @@ def style_model(request, rq_id, img_url):
             img = base64.b64encode(img.read())
             # url = "localhost:8000/showImg/" + rq_id + "/" + t_name
             # url = "43.201.219.33:8000/showImg/" + rq_id + "/" + t_name
-            imgUrl = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name + "/" + str(i+1)
+            imgUrl = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name + "/" + str(i + 1)
 
-            painting = Style(requestId=rq_id, tagName=t_name, tagUrl=imgUrl, img=img, setNum=i+1)
+            painting = Style(requestId=rq_id, tagName=t_name, tagUrl=imgUrl, img=img, setNum=i + 1)
             painting.save()
 
             # 로딩 퍼센트 11 * 9
-            # tag_loading += 11
-            # post_url = "http://3.39.22.13:8080/"
-            # requests.post(post_url, data=tag_loading)
+            tag_loading += 11
+            post_url = "http://3.39.22.13:8080/tag/load"
 
+            data = {
+                "requestId": rq_id,
+                "wait": tag_loading
+            }
+            requests.post(post_url, json=data)
 
     # get_url = "http://43.201.219.33:8000/api/picture/{}".format(rq_id)
     get_url = "http://13.114.204.13:8000/api/picture/{}".format(rq_id)
     response = requests.get(get_url)
     return response
+
 
 def style(request, rq_id, img_url):
     if not rq_id:
@@ -451,7 +469,6 @@ def style(request, rq_id, img_url):
 
 
 def show_img(request, rq_id, t_name, s_num):
-
     styles = Style.objects.filter(requestId=rq_id, tagName=t_name, setNum=int(s_num)).values("img")
     if styles.exists():
         base_string = styles.first()['img']
@@ -493,7 +510,6 @@ def show_emoji(request, rq_id, t_name, e_name, s_num):
 
 
 def show_emoji_gif(request, rq_id, t_name, e_name, s_num):
-
     emojis = Emoji.objects.filter(requestId=rq_id, tagName=t_name, emojiTag=e_name, setNum=int(s_num)).values(
         "emoji")
     if emojis.exists():

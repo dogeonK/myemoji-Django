@@ -22,6 +22,7 @@ class Style(models.Model):
 
 class Emoji(models.Model):
     requestId = models.CharField(max_length=50, null=False)
+    emojiRequestId = models.CharField(max_length=50, null=False, default="emojiRequestId")
     tagName = models.CharField(max_length=50, null=False)
     emojiTag = models.CharField(max_length=50, null=False)
     emojiUrl = models.CharField(max_length=256, null=False)
