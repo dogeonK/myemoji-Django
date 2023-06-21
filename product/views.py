@@ -98,7 +98,7 @@ class PictureAPI(APIView):
 # 화풍 변환처럼 바꿔야 함
 class EmojiAPI(APIView):
     def get(self, request, emojiRequestId):
-        queryset = Emoji.objects.filter(requestId=emojiRequestId)
+        queryset = Emoji.objects.filter(emojiRequestId=emojiRequestId)
         serializer = EmojiSerializer(queryset, many=True)
 
         data = serializer.data
