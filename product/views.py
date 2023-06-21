@@ -272,6 +272,7 @@ def stable_model(request, rq_id, emojiRequestId, img_url, paint):
 
             # 합성할 배경 이미지를 위의 파일 사이즈로 resize
             resize_back = background.resize((img_h, img_w))
+            resize_original = original_rem.resize((img_h, img_w))
 
             # 합성할 글씨 이미지 resize
             foreground = foreground_before.resize((img_h, img_w))
@@ -293,7 +294,7 @@ def stable_model(request, rq_id, emojiRequestId, img_url, paint):
             white_background = Image.new("RGBA", (img_h, img_w), (255, 255, 255, 255))
             # merge.png white_background 합성
             merged_white = Image.alpha_composite(white_background, merged_image)
-            merged_original = Image.alpha_composite(white_background, original_rem)
+            merged_original = Image.alpha_composite(white_background, resize_original)
             # 저장
             merged_white.save("merge_with_white_bg.png")
             merged_original.save("original_rem_white.png")
