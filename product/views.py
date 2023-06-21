@@ -264,9 +264,10 @@ def stable_model(request, rq_id, emojiRequestId, img_url, paint):
             wordImg = str(p.value) + ".png"
             background = Image.open("output.png").convert("RGBA")
             foreground = Image.open(wordImg).convert("RGBA")
+            original = Image.open("original.png").convert("RGBA")
 
             # 배경이 투명한 이미지 파일의 사이즈 가져오기
-            (img_h, img_w) = foreground.size
+            (img_h, img_w) = original.size
 
             # 합성할 배경 이미지를 위의 파일 사이즈로 resize
             resize_back = background.resize((img_h, img_w))
