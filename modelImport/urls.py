@@ -24,7 +24,7 @@ urlpatterns = [
 
     # path("api/product/", ProductListAPI.as_view()),
     path("api/picture/<str:rq_id>", PictureAPI.as_view()),
-    path("api/emoji/<str:rq_id>", EmojiAPI.as_view()),
+    path("api/emoji/<str:emojiRequestId>", EmojiAPI.as_view()),
 
     path("stable/<str:rq_id>/<str:emojiRequestId>/<str:img_url>/<str:paint>", stable),
     path("tag/<str:rq_id>/<str:img_url>", style),
