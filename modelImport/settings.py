@@ -39,9 +39,11 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'product',
     'rest_framework',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -73,6 +75,8 @@ TEMPLATES = [
 WSGI_APPLICATION = "modelImport.wsgi.application"
 ASGI_APPLICATION = "modelImport.wsgi.application"
 
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = False
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 

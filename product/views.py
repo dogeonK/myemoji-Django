@@ -97,8 +97,8 @@ class PictureAPI(APIView):
 # 스프링에서 요청 -> requestid, tag_name, emoji_url, emoji_tag 줘
 # 화풍 변환처럼 바꿔야 함
 class EmojiAPI(APIView):
-    def get(self, request, rq_id):
-        queryset = Emoji.objects.filter(requestId=rq_id)
+    def get(self, request, emojiRequestId):
+        queryset = Emoji.objects.filter(requestId=emojiRequestId)
         serializer = EmojiSerializer(queryset, many=True)
 
         data = serializer.data
@@ -330,7 +330,7 @@ def stable_model(request, rq_id, emojiRequestId, img_url, paint):
             }
             requests.post(post_url, json=data)
 
-    get_url = "http://13.114.204.13:8000/api/emoji/{}".format(rq_id)
+    get_url = "http://13.114.204.13:8000/api/emoji/{}".format(emojiRequestId)
     response = requests.get(get_url)
     return response
 
