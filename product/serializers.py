@@ -25,4 +25,4 @@ class EmojiSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Emoji
-        fields = ('requestId', 'tagName', "emojiTag", "emojiUrl", 'setNum')
+        fields = ('emojiRequestId', 'requestId', 'tagName', "emojiTag", "emojiUrl", 'setNum')
