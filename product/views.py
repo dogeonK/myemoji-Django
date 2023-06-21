@@ -263,7 +263,7 @@ def stable_model(request, rq_id, emojiRequestId, img_url, paint):
             # 이미지 파일 오픈
             wordImg = str(p.value) + ".png"
             background = Image.open("output.png").convert("RGBA")
-            foreground = Image.open(wordImg).convert("RGBA")
+            foreground_before = Image.open(wordImg).convert("RGBA")
             original = Image.open("original.png").convert("RGBA")
 
             # 배경이 투명한 이미지 파일의 사이즈 가져오기
@@ -271,6 +271,9 @@ def stable_model(request, rq_id, emojiRequestId, img_url, paint):
 
             # 합성할 배경 이미지를 위의 파일 사이즈로 resize
             resize_back = background.resize((img_h, img_w))
+
+            # 합성할 글씨 이미지 resize
+            foreground = foreground_before.resize((img_h, img_w))
 
             # 투명 마스트 생성
             alpha_mask = foreground.split()[3]
@@ -308,9 +311,9 @@ def stable_model(request, rq_id, emojiRequestId, img_url, paint):
             # url = "localhost:8000/showEmoji/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
             # url = "localhost:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
             # url = "43.201.219.33:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
-            emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + s.name + "/" + e_name + "/" + str(i + 1)
+            emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + paint + "/" + e_name + "/" + str(i + 1)
 
-            test = Emoji(requestId=rq_id, tagName=s.name, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i + 1)
+            test = Emoji(requestId=rq_id, tagName=paint, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i + 1)
             test.save()
 
             # 로딩 퍼센트 6 * 15
