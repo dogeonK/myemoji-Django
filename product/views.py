@@ -265,6 +265,7 @@ def stable_model(request, rq_id, emojiRequestId, img_url, paint):
             background = Image.open("output.png").convert("RGBA")
             foreground_before = Image.open(wordImg).convert("RGBA")
             original = Image.open("original.png").convert("RGBA")
+            original_rem = Image.open("original_rmbg.png").convert("RGBA")
 
             # 배경이 투명한 이미지 파일의 사이즈 가져오기
             (img_h, img_w) = original.size
@@ -292,15 +293,17 @@ def stable_model(request, rq_id, emojiRequestId, img_url, paint):
             white_background = Image.new("RGBA", (img_h, img_w), (255, 255, 255, 255))
             # merge.png white_background 합성
             merged_white = Image.alpha_composite(white_background, merged_image)
+            merged_original = Image.alpha_composite(white_background, original_rem)
             # 저장
             merged_white.save("merge_with_white_bg.png")
+            merged_original.save("original_rem_white.png")
 
             ffmpeg_path = util.get_ffmpeg_path()
             mediapy.set_ffmpeg(ffmpeg_path)
 
             # mp4 생성 후 -> gif 변경
             # merge.png에서 뒤에 흰 배경을 추가해야 할 듯
-            predict("original.png", "merge_with_white_bg.png", 3, model_name)
+            predict("original_rem_white.png", "merge_with_white_bg.png", 3, model_name)
             VideoFileClip('out.mp4').write_gif('out.gif')
             gif = open('out.gif', 'rb')
 
