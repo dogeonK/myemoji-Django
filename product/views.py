@@ -317,7 +317,7 @@ def stable_model(request, rq_id, emojiRequestId, img_url, paint):
             # url = "43.201.219.33:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
             emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + paint + "/" + e_name + "/" + str(i + 1)
 
-            test = Emoji(requestId=rq_id, tagName=paint, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i + 1)
+            test = Emoji(requestId=rq_id, tagName=paint, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i + 1, emojiRequestId=emojiRequestId)
             test.save()
 
             # 로딩 퍼센트 6 * 15
