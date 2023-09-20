@@ -88,7 +88,9 @@ class PictureAPI(APIView):
         serializer = StyleSerializer(queryset, many=True)
 
         data = serializer.data
-        post_url = "http://3.39.22.13:8080/tag/response"
+        # 의현 주소
+        # post_url = "http://3.39.22.13:8080/tag/response"
+        post_url = "http://3.34.178.125:8080/tag/response"
         response = requests.post(post_url, json=data)
 
         return Response(data)
@@ -102,7 +104,9 @@ class EmojiAPI(APIView):
         serializer = EmojiSerializer(queryset, many=True)
 
         data = serializer.data
-        post_url = "http://3.39.22.13:8080/emoji/response"
+        # 의현 주소
+        # post_url = "http://3.39.22.13:8080/emoji/response"
+        post_url = "http://3.34.178.125:8080/emoji/response"
         response = requests.post(post_url, json=data)
         return Response(data)
 
@@ -130,8 +134,9 @@ def stable_model(request, rq_id, emojiRequestId, img_url, paint):
     # url = "https://search.pstatic.net/sunny/?src=https%3A%2F%2Fmusicimage.xboxlive.com%2Fcatalog%2Fvideo.contributor.c41c6500-0200-11db-89ca-0019b92a3933%2Fimage%3Flocale%3Den-us%26target%3Dcircle&type=sc960_832"
 
     emoji_loading = 0
-
-    imgPath = "http://3.39.22.13:8080/imagePath/"
+    # 의현 주소
+    # imgPath = "http://3.39.22.13:8080/imagePath/"
+    imgPath = "http://3.34.178.125:8080/imagePath/"
     url = imgPath + str(img_url)
 
     image = download_image(url)
@@ -315,22 +320,27 @@ def stable_model(request, rq_id, emojiRequestId, img_url, paint):
             # url = "localhost:8000/showEmoji/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
             # url = "localhost:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
             # url = "43.201.219.33:8000/showEmojiGif/" + rq_id + "/" + t_name + "/" + e_name + "/" + str(i)
-            emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + paint + "/" + e_name + "/" + str(i + 1)
+            # 내 주소
+            #emojiUrl = "13.114.204.13:8000/showEmojiGif/" + rq_id + "/" + paint + "/" + e_name + "/" + str(i + 1)
+            emojiUrl = "219.250.128.100:8000/showEmojiGif/" + rq_id + "/" + paint + "/" + e_name + "/" + str(i + 1)
 
             test = Emoji(requestId=rq_id, tagName=paint, emojiTag=e_name, emojiUrl=emojiUrl, emoji=gif, setNum=i + 1, emojiRequestId=emojiRequestId)
             test.save()
 
             # 로딩 퍼센트 6 * 15
             emoji_loading += 6
-            post_url = "http://3.39.22.13:8080/emoji/load"
+            # 의현 주소
+            # post_url = "http://3.39.22.13:8080/emoji/load"
+            post_url = "http://3.34.178.125:8080/emoji/load"
 
             data = {
                 "emojiRequestId": emojiRequestId,
                 "wait": emoji_loading
             }
             requests.post(post_url, json=data)
-
-    get_url = "http://13.114.204.13:8000/api/emoji/{}".format(emojiRequestId)
+    # 내 주소
+    # get_url = "http://13.114.204.13:8000/api/emoji/{}".format(emojiRequestId)
+    get_url = "http://219.250.128.100:8000/api/emoji/{}".format(emojiRequestId)
     response = requests.get(get_url)
     return response
 
@@ -361,7 +371,9 @@ def style_model(request, rq_id, img_url):
     # print("style_model start")
     # print(rq_id)
     # print(img_url)
-    imgPath = "http://3.39.22.13:8080/imagePath/"
+    # 의현 주소
+    # imgPath = "http://3.39.22.13:8080/imagePath/"
+    imgPath = "http://3.34.178.125:8080/imagePath/"
     url = str(imgPath) + str(img_url)
     # print(url)
 
@@ -439,14 +451,18 @@ def style_model(request, rq_id, img_url):
             img = base64.b64encode(img.read())
             # url = "localhost:8000/showImg/" + rq_id + "/" + t_name
             # url = "43.201.219.33:8000/showImg/" + rq_id + "/" + t_name
-            imgUrl = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name + "/" + str(i + 1)
+            # 내 주소
+            # imgUrl = "13.114.204.13:8000/showImg/" + rq_id + "/" + t_name + "/" + str(i + 1)
+            imgUrl = "219.250.128.100:8000/showImg/" + rq_id + "/" + t_name + "/" + str(i + 1)
 
             painting = Style(requestId=rq_id, tagName=t_name, tagUrl=imgUrl, img=img, setNum=i + 1)
             painting.save()
 
             # 로딩 퍼센트 11 * 9
             tag_loading += 11
-            post_url = "http://3.39.22.13:8080/tag/load"
+            # 의현 주소
+            # post_url = "http://3.39.22.13:8080/tag/load"
+            post_url = "http://3.34.178.125:8080/tag/load"
 
             data = {
                 "requestId": rq_id,
@@ -455,7 +471,9 @@ def style_model(request, rq_id, img_url):
             requests.post(post_url, json=data)
 
     # get_url = "http://43.201.219.33:8000/api/picture/{}".format(rq_id)
-    get_url = "http://13.114.204.13:8000/api/picture/{}".format(rq_id)
+    # 내 주소
+    # get_url = "http://13.114.204.13:8000/api/picture/{}".format(rq_id)
+    get_url = "http://219.250.128.100:8000/api/picture/{}".format(rq_id)
     response = requests.get(get_url)
     return response
 
